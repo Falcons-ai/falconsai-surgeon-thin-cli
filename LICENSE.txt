@@ -1,0 +1,18 @@
+FALCONS.AI Model Surgeon — thin client (`falconsai-surgeon`)
+
+Copyright (c) 2026 FALCONS.AI. All rights reserved.
+
+This package is proprietary. It may be installed and used to operate a FALCONS.AI
+Model Surgeon server you are entitled to use, and to verify Model Surgeon packages.
+It may not be redistributed, modified for redistribution, or reverse engineered,
+except where such a restriction is void under applicable law.
+
+ONE EXCEPTION, BY DESIGN: the module `surgeon/verify.py` — the offline package
+verifier — is licensed under the Apache License, Version 2.0, and carries that
+notice in its own header. Verification of a FALCONS.AI Model Surgeon package is
+free for everyone, forever, with or without an account; that module may be used,
+copied and redistributed under Apache-2.0 independently of the rest of this package.
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED.

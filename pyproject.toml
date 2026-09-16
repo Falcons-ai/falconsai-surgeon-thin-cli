@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=61"]   # the wheel is built offline by tools/build_client.py with --no-build-isolation
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "falconsai-surgeon"
+version = "7.68"
+description = "FALCONS.AI Model Surgeon thin client: hand a checkpoint to a browser session, verify a Surgeon package offline. THIN-1 (2) — no server code, the verifier needs cryptography for ed25519 signatures."
+readme = "README.md"
+requires-python = ">=3.9"
+# THIN-1 ⑥b (V7.68): PyPI renders these on the project page. `license` is the SPDX expression form (the free-text
+# `{text = ...}` form is deprecated since PEP 639); the client is proprietary and `surgeon/verify.py` carries its own
+# Apache-2.0 header — LICENSE.txt in the wheel states both.
+# NOTE (V7.68): the SPDX-string form of `license` and `license-files` (PEP 639) needs setuptools >= 77; the build
+# environment here has an older one, so the file form is used — valid in every setuptools since 61 and rendered by
+# PyPI as the license text. Move to the SPDX string when the build environment is upgraded.
+license = {file = "LICENSE.txt"}
+keywords = ["model-surgery", "safetensors", "neural-network", "attestation", "falconsai"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Utilities",
+]
+dependencies = ["cryptography"]
+
+[project.urls]
+Homepage = "https://surgeon.falcons.ai/"
+Download = "https://surgeon.falcons.ai/download/"
+Source = "https://github.com/Falcons-ai/falconsai-surgeon-thin-cli"
+Issues = "https://github.com/Falcons-ai/falconsai-surgeon-thin-cli/issues"
+
+[project.scripts]
+surgeon = "surgeon.cli:main"
+
+[tool.setuptools]
+packages = ["surgeon"]
