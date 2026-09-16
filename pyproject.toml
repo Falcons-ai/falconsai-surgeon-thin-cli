@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "falconsai-surgeon"
-version = "7.68"
+version = "7.69"
 description = "FALCONS.AI Model Surgeon thin client: hand a checkpoint to a browser session, verify a Surgeon package offline. THIN-1 (2) — no server code, the verifier needs cryptography for ed25519 signatures."
 readme = "README.md"
 requires-python = ">=3.9"
