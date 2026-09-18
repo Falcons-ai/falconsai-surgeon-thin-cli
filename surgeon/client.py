@@ -105,8 +105,19 @@ class Remote:
         if not self.cache:
             return
         try:
-            os.makedirs(os.path.dirname(self.cache), exist_ok=True)
+            # SA-042 (V7.72, the V7.65 sweep): the cache holds a session cookie; the directory is 0700 and the file 0600
+            # regardless of the process umask (chmod after makedirs/save so an existing looser mode is tightened too).
+            d = os.path.dirname(self.cache)
+            os.makedirs(d, mode=0o700, exist_ok=True)
+            try:
+                os.chmod(d, 0o700)
+            except OSError:
+                pass   # Windows: chmod is a no-op beyond the read-only bit
             self.jar.save(ignore_discard=True, ignore_expires=True)
+            try:
+                os.chmod(self.cache, 0o600)
+            except OSError:
+                pass
         except Exception:
             pass   # a cache that cannot be written only costs the resume
 
