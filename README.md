@@ -2,7 +2,7 @@
 
 **Model Surgeon** — https://surgeon.falcons.ai — is a visual operating theatre for neural networks: load a real checkpoint in the browser, see its anatomy in 3-D, operate on it with reversible tools (excise, merge, quantize, fold), measure every consequence, and export a package whose signed record anyone can verify.
 
-`falconsai-surgeon` is the thin client for that server. It holds no server code and depends on one library (`cryptography`, for the verifier's ed25519 check). Version 7.80.
+`falconsai-surgeon` is the thin client for that server. It holds no server code and depends on one library (`cryptography`, for the verifier's ed25519 check). Version 7.89.
 
 ```
 pip install falconsai-surgeon
