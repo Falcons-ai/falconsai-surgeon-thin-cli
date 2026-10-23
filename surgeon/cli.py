@@ -71,6 +71,11 @@ def main(argv=None):
         p.add_argument("recipe"); p.add_argument("target", help="a checkpoint file (fleet: a folder of them)")
         p.add_argument("--server", required=True); p.add_argument("--key", default=None)
         p.add_argument("--open", action="store_true", help="after the job, mint the hand-off link and open the edited table")
+    p = sub.add_parser("watch-definition", help="keep a local model_definition.py equal to the model on the THEATRE's table as you edit it (paste the token from the theatre's Link CLI card)")
+    p.add_argument("--token", required=True, help="the 16-hex token the Link CLI card printed (single-use, 60 seconds)")
+    p.add_argument("--out", default="model_definition.py", help="the file to keep updated (default: model_definition.py in this folder)")
+    p.add_argument("--interval", type=float, default=2.0, help="seconds between polls (default 2)")
+    p.add_argument("--server", required=True); p.add_argument("--key", default=None)
     p = sub.add_parser("report", help="upload a checkpoint and print what the server read (vitals)")
     p.add_argument("path"); p.add_argument("--server", required=True); p.add_argument("--key", default=None)
     p = sub.add_parser("excise", help="one excise on a checkpoint, as a one-op job")
@@ -105,6 +110,17 @@ def main(argv=None):
             else:
                 print("next        : nothing - upload, replay, fleet, report, excise and merge will run.")
             return 0
+        if a.cmd == "watch-definition":
+            if a.interval < 0.5:
+                raise ClientError("--interval below 0.5 s would hammer the server's rate limit - use 0.5 or more.")
+            rec = r.attach(a.token)
+            print(f"linked      : {rec.get('filename')} - model {rec.get('model_id')} - {rec.get('log_len')} log entries")
+            print(f"watching    : every {a.interval:g} s -> {a.out} (Ctrl+C to stop)")
+            try:
+                n = r.watch_definition(a.out, interval=a.interval)
+            except KeyboardInterrupt:
+                print("stopped."); return 0
+            return 0 if n else 1
         if a.cmd in ("upload", "report"):
             st = _upload(r, a.path)
             if a.cmd == "report":

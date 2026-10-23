@@ -3,6 +3,7 @@ cookie kept in a jar, the 60-second single-use hand-off link. Lifted from `tools
 `_remote_upload` / `_remote_claim` (HANDOFF-1, V7.14) with two changes: errors RAISE `ClientError` instead of
 `sys.exit`, so a caller decides; nothing here imports the server package."""
 import http.cookiejar
+import time
 import json
 import os
 import sys
@@ -183,6 +184,67 @@ class Remote:
         """THIN-1 step 4: the server reads the recipe (YAML or JSON) against its contract - `/api/recipe_parse` - so
         the client needs no YAML parser. Returns {source_model, ops, count}."""
         return self.call("/api/recipe_parse", raw=text.encode("utf-8"))
+
+    def attach(self, token):
+        """MODELDEF-SYNC (V7.107, ruling `L1`): redeem the token the theatre's Link CLI card printed. The server
+        binds THIS jar to the browser's session (`Set-Cookie`, kept by the jar on `_save`). Returns the server's
+        record: filename, model_id, log_len. The token is single-use and lives 60 seconds."""
+        if not isinstance(token, str) or len(token) != 16 or any(c not in "0123456789abcdef" for c in token):
+            raise ClientError("the link token is 16 hex characters - paste exactly what the Link CLI card printed.")
+        return self.call("/api/session_attach", {"token": token})
+
+    def get_text(self, path):
+        """A GET that returns the body as text (the definition file), same jar, key and refusals as `get`."""
+        url = self.base + path
+        req = urllib.request.Request(url, method="GET")
+        if self.key:
+            req.add_header("X-Surgeon-Key", self.key)
+        if self.verbose:
+            print(f"-> GET {url}", file=sys.stderr)
+        try:
+            with self.opener.open(req, timeout=self.timeout) as r:
+                data = r.read()
+        except urllib.error.HTTPError as e:
+            raise ClientError(f"HTTP {e.code} from {path} - {e.reason}\n" + NEXT_ACTION.get(e.code, "next: the server refused this."))
+        except urllib.error.URLError as e:
+            if isinstance(e.reason, ClientError):
+                raise e.reason
+            raise ClientError(f"could not reach {self.base} - {e.reason}\nnext: is the server up and the address right?")
+        finally:
+            self._save()
+        return data.decode("utf-8", "replace")
+
+    def watch_definition(self, out, interval=2.0, sleep=None, clock=None, once=False, log=print):
+        """MODELDEF-SYNC (V7.107, rulings `R` - `2`): RECEIVE the model definition as the theatre edits it. Polls
+        `/api/model_definition/etag` every `interval` seconds; when the etag moves, downloads `/api/model_definition`
+        and writes `out` ATOMICALLY (a sibling temp file renamed over the old one) - the bytes are exactly what the
+        Model Definition button serves. Prints one line per write. Stops when the server says the table is empty or
+        the session ended (HTTP 400/410), or on Ctrl+C. `sleep`/`clock`/`once` exist so a lock can drive the loop
+        without waiting. Returns the number of writes."""
+        sleep = sleep or time.sleep
+        last, writes = None, 0
+        while True:
+            try:
+                tag = self.get("/api/model_definition/etag")
+            except ClientError as e:
+                msg = str(e)
+                if msg.startswith("HTTP 400") or msg.startswith("HTTP 410"):
+                    log("watch: the table is empty or the session ended - " + msg.splitlines()[0] + "\nnext: load a model in the theatre, click Link CLI, run watch-definition again.")
+                    return writes
+                raise
+            etag = str(tag.get("etag") or "")
+            if etag and etag != last:
+                body = self.get_text("/api/model_definition")
+                tmp = out + ".tmp"
+                with open(tmp, "w", encoding="utf-8", newline="\n") as f:
+                    f.write(body)
+                os.replace(tmp, out)
+                writes += 1
+                log(f"wrote {out} - etag {etag} - log entries {tag.get('log_len')} - {tag.get('filename')}")
+                last = etag
+            if once:
+                return writes
+            sleep(interval)
 
     def job(self, ops, kind="replay"):
         """THIN-1 step 4: post a job to the session the jar holds and return its record (the job runs inside the

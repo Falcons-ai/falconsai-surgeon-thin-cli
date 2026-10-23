@@ -2,7 +2,7 @@
 
 **Model Surgeon** — https://surgeon.falcons.ai — is a visual operating theatre for neural networks: load a real checkpoint in the browser, see its anatomy in 3-D, operate on it with reversible tools (excise, merge, quantize, fold), measure every consequence, and export a package whose signed record anyone can verify.
 
-`falconsai-surgeon` is the thin client for that server. It holds no server code and depends on one library (`cryptography`, for the verifier's ed25519 check). Version 7.102.
+`falconsai-surgeon` is the thin client for that server. It holds no server code and depends on one library (`cryptography`, for the verifier's ed25519 check). Version 7.113.
 
 ```
 pip install falconsai-surgeon
@@ -16,6 +16,7 @@ surgeon doctor --server https://surgeon.falcons.ai --key <your key>
 - **Replay a recipe** — `surgeon replay <recipe> <checkpoint>` applies a surgery you finalized in the browser (`ops.yaml`) to a new checkpoint, through the same edit door the browser uses; the server's record is printed, and `--open` hands you the edited table in the browser.
 - **Run a fleet** — `surgeon fleet <recipe> <folder>` applies one recipe to every checkpoint in a folder, one job each: the server's record per checkpoint and a closing `N of M checkpoint(s) clean` line; exit 1 if any op was refused.
 - **Report, excise, merge headlessly** — `surgeon report <checkpoint>` prints what the server read; `surgeon excise <checkpoint> <node>` and `surgeon merge <checkpoint> <name> [--method lerp|slerp --alpha 0.5]` run as one-op jobs (the merge donor must already be on the table).
+- **Keep a local model definition in step with the theatre** — `surgeon watch-definition --server URL --key KEY --token T --out model_definition.py` (MODELDEF-SYNC, V7.109): click ⇄ Link CLI in the theatre, paste the one command it prints (the token inside it is single-use and lives 60 seconds); the file is rewritten, atomically, every time the table changes — the same bytes the ⬇ Model Definition button serves. `--interval` sets the poll (default 2 s, never below 0.5). Ctrl+C stops it; when the session ends or the table is cleared the client says so and stops. Practitioner.
 - **Know where you stand** — `surgeon doctor` prints the server's health and version, whether your key is recognised and its tier, whether the client version matches the server, and the next action.
 
 Every command that runs a job returns the server's own words; exit codes are `0` clean · `1` the server refused one or more ops (the job ran) · `2` the client refused (its message says why). Surgery and jobs need a Practitioner key; `verify` needs none. Tiers and limits: https://surgeon.falcons.ai/pricing
